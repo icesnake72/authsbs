@@ -1,0 +1,30 @@
+# IntelliJ IDEA 관련 파일들
+.idea/
+*.iml
+
+# 빌드 아티팩트
+target/
+*.jar
+*.war
+
+# Maven, Gradle 관련 디렉토리 및 파일
+.mvn/
+.gradle/
+build/
+
+# 로컬 설정 파일들
+*.log
+*.properties
+*.yml
+
+# Git 관련 파일들
+.git/
+.gitignore
+
+# OS 관련 파일들 (macOS, Windows)
+.DS_Store
+Thumbs.db
+
+# Dockerfile과 관련된 파일들 제외 (이미지 빌드에 필요하지 않음)
+Dockerfile
+docker-compose.yml

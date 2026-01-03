@@ -1,0 +1,88 @@
+# version: '3.8'
+
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: auth
+
+    ports:
+      - "8070:8070"
+
+    #환경 변수 설정
+    environment:
+      DB_URL: jdbc:mysql://mysql8:3306/mannal?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASSWORD: 1234
+#      DB_URL: jdbc:mysql://ls-09c568874e30cb3635ca525d02ff2051c381f5d0.c14s8aaeg9qd.ap-northeast-2.rds.amazonaws.com:3306/mannal?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+#      DB_USER: dbmasteruser
+#      DB_PASSWORD: d7EoncJZ9C5[^rf-hrZ1t{[e(tH=:zR^
+
+      JWT_SECRET: C7vgBMZ+R3qfhJMBFPN+cYmZp2Y97WLkwrb4+n7m3gap+0smjs/PFNwqHrltKWmv98SAoEpfajf2DevwBfC7CA==
+      JWT_ACCESS_TOKEN_EXPIRATION: 600000
+      JWT_REFRESH_TOKEN_EXPIRATION: 604800000
+
+      KAKAO_CLIENT_ID: f0bfa98dfa477735feeb8dbfdfa1d105
+      KAKAO_CLIENT_SECRET: U4JgTAZGirCvVGmmnvuSlsoWlKFPstvV
+      KAKAO_REDIRECT_URI: http://localhost:8070/api/oauth/kakao/callback
+
+      # Spring profile 정보(개발 전용, 로컬 환경에서 테스트)
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+
+    # 네트워크 설정
+    networks:
+      - auth-network
+    #    network_mode: bridge
+
+    # 의존성(Dependency)
+    external_links:
+      - mysql8
+
+    # 재시작 정책
+    restart: unless-stopped
+
+# 기존 auth-network에 연결함
+networks:
+  auth-network:
+    driver: bridge
+    external: true
+
+######################################################
+# 1. auth container 실행하기
+# 빌드하지 않고 백그라운드로 컨테이너를 바로 실행하기
+# docker compose up -d
+
+# 빌드하고 백그라운드로 컨테이너를 실행하기
+# docker compose up -d --build
+
+# 2. 로그 확인하기(실시간, 종료하려면 ctrl + c)
+# docker compose logs -f auth
+
+# 3. 정지
+# docker compose stop
+
+# 4. 재시작
+# docker compose restart
+
+# 5. 삭제
+# docker compose down
+
+# 6. 빌드 후 시작하기
+# docker compose up -d --build
+
+# 7. 컨테이너 & 이미지 삭제
+# docker compose down --rmi all
+
+
+
+
+
+
+
+
+
+
+
+

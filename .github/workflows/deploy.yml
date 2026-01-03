@@ -1,0 +1,55 @@
+# 워크플로우 이름을 지정
+name: Deploy to LightSail
+
+# 트리거 설정: 깃헙 액션이 언제 발동될지를 결정
+on:
+  push:
+    branches:
+      - main      # main branch를 push하면 actions를 실행시킴
+
+env:
+  # 환경 변수들 지정...
+  IMAGE_NAME: icesnake72/auth
+  # github container registry
+  REGISTRY: ghcr.io
+
+# 실제로 실행할 actions들을 여기다 정의함
+jobs:
+  # 작업 이름을 부여함
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    # 권한설정: 어떤일을 할 수 있는지 정의
+    permissions:
+      contents: read    # repository의 코드를 읽을 수 있는 권한을 부여
+      packages: write   # GHCR에 도커 이미지를 업로드(저장)할 수 있는 권한
+
+    # 아래에 정의되는 스텝(작업 단위)순서대로 작업을 처리함
+    steps:
+      - name: Code Check-out
+        uses: actions/checkout@v4
+
+      - name: Java 17 설정
+        uses: actions/setup-java@v4   # 자바 설치 액션
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Gradle Build
+        run: |
+          chmod +x ./gradlew
+          # back-end application build
+          ./gradlew clean bootJar -x test --no-daemon     
+
+      - name: Docker Build
+        uses: docker/setup-buildx-action@v3   # docerk container build extension 설정
+
+      - name: GHCR 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}           # 깃허브에서 자동으로 제공
+          password: ${{ secrets.GITHUB_TOKEN }}   # 깃허브에서 자동으로 제공
+
+
