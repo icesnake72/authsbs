@@ -92,20 +92,20 @@ jobs:
       - name: docker-compose.prod.yml 전송
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secret.LIGHTSAIL_HOST }}
-          username: ${{ secret.LIGHTSAIL_USER }}
-          key: ${{ secret.LIGHTSAIL_SSH_KEY }}
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           port: 22
           source: "docker-compose.prod.yml"
-          target: "/home/${{ secret.LIGHTSAIL_USER }}/auth"
+          target: "/home/${{ secrets.LIGHTSAIL_USER }}/auth"
 
       # 9단계 : LightSail 서버에 SSH로 접속하여 배포
       - name: LightSail 서버 배포
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secret.LIGHTSAIL_HOST }}
-          username: ${{ secret.LIGHTSAIL_USER }}
-          key: ${{ secret.LIGHTSAIL_SSH_KEY }}
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           port: 22
           script: |
             # 1. 디렉토리 준비
