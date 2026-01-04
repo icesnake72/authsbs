@@ -16,9 +16,6 @@ services:
       DB_URL: jdbc:mysql://mysql8:3306/mannal?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
       DB_USER: root
       DB_PASSWORD: 1234
-#      DB_URL: jdbc:mysql://ls-09c568874e30cb3635ca525d02ff2051c381f5d0.c14s8aaeg9qd.ap-northeast-2.rds.amazonaws.com:3306/mannal?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-#      DB_USER: dbmasteruser
-#      DB_PASSWORD: d7EoncJZ9C5[^rf-hrZ1t{[e(tH=:zR^
 
       JWT_SECRET: C7vgBMZ+R3qfhJMBFPN+cYmZp2Y97WLkwrb4+n7m3gap+0smjs/PFNwqHrltKWmv98SAoEpfajf2DevwBfC7CA==
       JWT_ACCESS_TOKEN_EXPIRATION: 600000

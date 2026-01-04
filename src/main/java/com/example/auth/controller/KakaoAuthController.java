@@ -49,7 +49,7 @@ public class KakaoAuthController {
         response.sendRedirect(authorizationUrl);
     }
 
-    // http://localhost:8070/oauth/kakao/callback
+    // http://localhost:8070/api/oauth/kakao/callback
     @GetMapping("/callback")    // http://localhost:8070/oauth/kakao/callback
 //    public ResponseEntity<ApiResponse<LoginResponse>> kakaoCallback(
     public void kakaoCallback(

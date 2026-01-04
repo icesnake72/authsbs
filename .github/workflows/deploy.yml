@@ -9,7 +9,7 @@ on:
 
 env:
   # 환경 변수들 지정...
-  IMAGE_NAME: icesnake72/auth
+  IMAGE_NAME: icesnake72/auth-backend
   # github container registry
   REGISTRY: ghcr.io
 
@@ -17,6 +17,7 @@ env:
 jobs:
   # 작업 이름을 부여함
   build-and-deploy:
+    # 실행 환경: Github에서 제공하는 ubuntu 최신 버전 서버에서 실행
     runs-on: ubuntu-latest
 
     # 권한설정: 어떤일을 할 수 있는지 정의
@@ -26,9 +27,11 @@ jobs:
 
     # 아래에 정의되는 스텝(작업 단위)순서대로 작업을 처리함
     steps:
+      # 1단계 : 코드 체크아웃
       - name: Code Check-out
         uses: actions/checkout@v4
 
+      # 2단계 : 빌드 환경 설정
       - name: Java 17 설정
         uses: actions/setup-java@v4   # 자바 설치 액션
         with:
@@ -36,20 +39,125 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      # 3단계 : 백앤드 앱 빌드
       - name: Gradle Build
         run: |
+          # ./gradlew 실행 권한을 부여
           chmod +x ./gradlew
           # back-end application build
           ./gradlew clean bootJar -x test --no-daemon     
 
+      # 4단계 : 도커 빌드 환경 설정, 도커 이미지 빌드 도구 설정
       - name: Docker Build
-        uses: docker/setup-buildx-action@v3   # docerk container build extension 설정
+        # docerk container build extension 설정
+        uses: docker/setup-buildx-action@v3
 
+      # 5단계 : Github Container Registry에 로그인
       - name: GHCR 로그인
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}           # 깃허브에서 자동으로 제공
           password: ${{ secrets.GITHUB_TOKEN }}   # 깃허브에서 자동으로 제공
+
+      # 6단계 : 도커 이미지 메타데이터 생성
+      - name: Docker 메타데이터 추출
+        id: meta
+        # docker/metadata-action@v5 : 도커 이미지 태그와 라벨을 자동으로 생성
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # 자동으로 생성할 태그 규칙
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # 7단계 : Docker 이미지 빌드 및 GHCR에 업로드
+      - name: Docker 이미지 빌드 및 푸시
+        uses: docker/build-push-action@v5
+        with:
+          # 빌드는 현재 디렉토리를 대상으로
+          context: .
+          # 빌드 후 레지스트리에 푸시
+          push: true
+          # 태그는 위에 메타 설정의 결과값 중 tags값으로 설정
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # GHA에서 빠른 빌드를 위해 캐싱 기능을 제공해주고 있음
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 8단계 : docker-compose.prod.yml 파일을 LightSail 서버에 전송
+      - name: docker-compose.prod.yml 전송
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secret.LIGHTSAIL_HOST }}
+          username: ${{ secret.LIGHTSAIL_USER }}
+          key: ${{ secret.LIGHTSAIL_SSH_KEY }}
+          port: 22
+          source: "docker-compose.prod.yml"
+          target: "/home/${{ secret.LIGHTSAIL_USER }}/auth"
+
+      # 9단계 : LightSail 서버에 SSH로 접속하여 배포
+      - name: LightSail 서버 배포
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secret.LIGHTSAIL_HOST }}
+          username: ${{ secret.LIGHTSAIL_USER }}
+          key: ${{ secret.LIGHTSAIL_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. 디렉토리 준비
+            mkdir -p ~/auth
+            cd ~/auth
+            
+            # 2. docker-compose.prod.yml 파일 확인
+            echo "docker-compose.prod.yml 파일 확인중..."
+            ls -lh ~/auth/docker-compose.prod.yml
+            
+            # 3. .env 환경값을 갖는 파일을 생성
+            cat > .env << 'EOF'
+            DB_URL=${{ secrets.DB_URL }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_ACCESS_TOKEN_EXPIRATION=${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}
+            JWT_REFRESH_TOKEN_EXPIRATION=${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}
+            KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+            KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            SPRING_PROFILES_ACTIVE=prod
+            EOF
+            
+            # 4. GHCR에 로그인
+            echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # 5. mysql & backend image pull
+            sudo docker compose -f docker-compose.prod.yml pull
+            
+            # 6. 컨테이너 실행
+            sudo docker compose -f docker-compose.prod.yml up -d
+            
+            # 7. 사용하지 않는 이미지들 제거
+            # -a : 모든 사용하지 않는 파일들
+            # -f : 묻지말고 강제로...
+            sudo docker image prune -af
+            
+            # 8. 배포 결과 확인하기
+            sudo docker compose -f docker-compose.prod.yml ps
+            
+            
+            
+            
+            
+            
+          
+          
+        
+      
+
+
 
 
