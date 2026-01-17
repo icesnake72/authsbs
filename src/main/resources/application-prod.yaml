@@ -1,0 +1,60 @@
+server:
+  port: 8070
+
+# JWT 설정
+jwt:
+  # 비밀키(최소 64자 이상)
+  secret: ${JWT_SECRET}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION} # access token 만료시간(10분 * 60초 * millisec.)
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION} # refresh token 만료시간 (7일)
+
+oauth:
+  kakao:
+    provider_name: KAKAO
+    client-id: ${KAKAO_CLIENT_ID}   # 카카오 REST API 키
+    client-secret: ${KAKAO_CLIENT_SECRET} # 카카오 Client Secret 키
+    redirect-uri: ${KAKAO_REDIRECT_URI}    # 카카오 인증후 백앤드에 redirect되어질 URL
+
+    authorization-uri: https://kauth.kakao.com/oauth/authorize  # 카카오 인가 코드 요청 URL
+    token-uri: https://kauth.kakao.com/oauth/token              # 카카오 억세스 토큰 요청 URL
+    user-info-uri: https://kapi.kakao.com/v2/user/me            # 카카오 사용자 정보 조회 URL
+
+
+# log file write
+logging:
+  file:
+    name: logs/authapp.log
+  level:
+    root: INFO
+    com.example.auth: DEBUG
+    org.springframework.security: DEBUG   # filter chain debugging(필터 체인들을 보여줌)
+    org.springframework.security.web.DefaultSecurityFilterChain: DEBUG
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+
+
+spring:
+  application:
+    name: auth
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa: # ORM
+    hibernate:
+      ddl-auto: update # create(항상 새롭게 테이블 생성), update(테이블 업데이트), validate(엔티티와 테이블구조 일치하는지 검증)...
+    show-sql: false  # sql문장이 잘 가는지 디버깅 용도
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+          time_zone: Asia/Seoul
+        order_inserts: true
+        order_updates: true
