@@ -44,6 +44,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("JwtAuthenticationFilter::doFilterInternal()");
 //        log.debug("JwtAuthenticationFilter::doFilterInternal()");
 
+        log.info("JWT Filter 요청 URI: {}", request.getRequestURI());
+
+
         try {
             // request header에서 토큰 추출하기
             String token = extractTokenRequest(request);
