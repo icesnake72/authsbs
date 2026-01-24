@@ -45,3 +45,8 @@ out/
 *.pem
 *.ppk
 *.p12
+
+/uploads
+*.jpg
+*.png
+*.webp

@@ -58,3 +58,10 @@ spring:
         format_sql: true
         jdbc:
           time_zone: Asia/Seoul
+
+
+# 파일 저장 경로 설정
+file:
+  upload:
+    dir: ${FILE_UPLOAD_DIR:./uploads}
+    base-url: ${FILE_UPLOAD_BASE_URL:http://localhost:8070/uploads}

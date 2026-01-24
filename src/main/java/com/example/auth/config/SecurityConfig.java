@@ -62,6 +62,7 @@ public class SecurityConfig {
                         auth
                                 .requestMatchers("/api/health", "/api/signup", "/api/login", "/api/refresh", "/api/loginex").permitAll()  // 여기에 적힌 route를 통과시킴
                                 .requestMatchers("/api/oauth/kakao/**").permitAll()
+                                .requestMatchers("/uploads/**").permitAll()
                                 .anyRequest().authenticated()   // 그 외는 다 인증 필요
                 )
                 .exceptionHandling(ex ->

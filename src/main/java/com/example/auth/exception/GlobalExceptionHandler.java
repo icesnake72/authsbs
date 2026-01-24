@@ -91,4 +91,35 @@ public class GlobalExceptionHandler {
                 ApiResponse.error("올바르지 않은 Http Method로 요청하였습니다.")
         );
     }
+
+    // 처리하지 않은 에러(Exception)들을 공통적으로 처리하는 부분
+    @ExceptionHandler(Exception.class)
+    @SuppressWarnings("NullableProblems")
+    public ResponseEntity<ApiResponse<Void>> handleAllExceptions(Exception ex) {
+        // 예외 발생 위치 추출
+        StackTraceElement[] stackTrace = ex.getStackTrace();
+        String errorLocation = "알 수 없음";
+
+        if (stackTrace != null && stackTrace.length > 0) {
+            // 에러가 존재한다면...
+            // 에러가 발생한 위치를 저장
+            StackTraceElement firstElement = stackTrace[0];
+            errorLocation = String.format("%s, %s(line: %d)",
+                    firstElement.getClassName(),
+                    firstElement.getMethodName(),
+                    firstElement.getLineNumber());
+        }
+
+        // 에러 내용 로깅
+        log.error("--- 예상치 못한 에러가 발생함 ---");
+        log.error("예외 타입: {}", ex.getClass().getName());
+        log.error("예외 메시지: {}", ex.getMessage());
+        log.error("발생 위치: {}", errorLocation);
+        log.error("전체 스택 트레이스: ", ex);
+        log.error("---------------------------------------");
+
+        // 응답으로 반환하기
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("서버 오류가 발생했습니다. 서버측 로그를 확인해주세요"));
+    }
 }
